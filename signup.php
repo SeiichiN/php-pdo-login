@@ -1,12 +1,13 @@
 <?php
-require 'password.php';   // password_hash()はphp 5.5.0以降の関数のため、バージョンが古くて使えない場合に使用
+// require 'password.php';   // password_hash()はphp 5.5.0以降の関数のため、バージョンが古くて使えない場合に使用
 // セッション開始
 session_start();
 
 $db['host'] = "localhost";  // DBサーバのURL
-$db['user'] = "hogeUser";  // ユーザー名
-$db['pass'] = "hogehoge";  // ユーザー名のパスワード
-$db['dbname'] = "loginManagement";  // データベース名
+$db['user'] = "se-ichi";  // ユーザー名
+$db['pass'] = "qwer";  // ユーザー名のパスワード
+$db['dbname'] = "logindb";  // データベース名
+$db['dbtable'] = "dbuser";  // テーブル名
 
 // エラーメッセージ、登録完了メッセージの初期化
 $errorMessage = "";
@@ -35,7 +36,7 @@ if (isset($_POST["signUp"])) {
         try {
             $pdo = new PDO($dsn, $db['user'], $db['pass'], array(PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION));
 
-            $stmt = $pdo->prepare("INSERT INTO userData(name, password) VALUES (?, ?)");
+            $stmt = $pdo->prepare("INSERT INTO {$db['dbtable']} (name, password) VALUES (?, ?)");
 
             $stmt->execute(array($username, password_hash($password, PASSWORD_DEFAULT)));  // パスワードのハッシュ化を行う（今回は文字列のみなのでbindValue(変数の内容が変わらない)を使用せず、直接excuteに渡しても問題ない）
             $userid = $pdo->lastinsertid();  // 登録した(DB側でauto_incrementした)IDを$useridに入れる
@@ -75,7 +76,7 @@ if (isset($_POST["signUp"])) {
             </fieldset>
         </form>
         <br>
-        <form action="Login.php">
+        <form action="login.php">
             <input type="submit" value="戻る">
         </form>
     </body>

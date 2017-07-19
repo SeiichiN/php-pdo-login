@@ -1,12 +1,13 @@
 <?php
-require 'password.php';   // password_verfy()はphp 5.5.0以降の関数のため、バージョンが古くて使えない場合に使用
+// require 'password.php';   // password_verfy()はphp 5.5.0以降の関数のため、バージョンが古くて使えない場合に使用
 // セッション開始
 session_start();
 
 $db['host'] = "localhost";  // DBサーバのURL
-$db['user'] = "hogeUser";  // ユーザー名
-$db['pass'] = "hogehoge";  // ユーザー名のパスワード
-$db['dbname'] = "loginManagement";  // データベース名
+$db['user'] = "se-ichi";  // ユーザー名
+$db['pass'] = "qwer";  // ユーザー名のパスワード
+$db['dbname'] = "logindb";  // データベース名
+$db['dbtable'] = "dbuser";  // テーブル名
 
 // エラーメッセージの初期化
 $errorMessage = "";
@@ -31,7 +32,7 @@ if (isset($_POST["login"])) {
         try {
             $pdo = new PDO($dsn, $db['user'], $db['pass'], array(PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION));
 
-            $stmt = $pdo->prepare('SELECT * FROM userData WHERE id = ?');
+            $stmt = $pdo->prepare("SELECT * FROM {$db['dbtable']} WHERE id = ?");
             $stmt->execute(array($userid));
 
             $password = $_POST["password"];
@@ -42,13 +43,13 @@ if (isset($_POST["login"])) {
 
                     // 入力したIDのユーザー名を取得
                     $id = $row['id'];
-                    $sql = "SELECT * FROM userData WHERE id = $id";  //入力したIDからユーザー名を取得
+                    $sql = "SELECT * FROM {$db['dbtable']} WHERE id = $id";  //入力したIDからユーザー名を取得
                     $stmt = $pdo->query($sql);
                     foreach ($stmt as $row) {
                         $row['name'];  // ユーザー名
                     }
                     $_SESSION["NAME"] = $row['name'];
-                    header("Location: Main.php");  // メイン画面へ遷移
+                    header("Location: main.php");  // メイン画面へ遷移
                     exit();  // 処理終了
                 } else {
                     // 認証失敗
@@ -89,7 +90,7 @@ if (isset($_POST["login"])) {
             </fieldset>
         </form>
         <br>
-        <form action="SignUp.php">
+        <form action="signup.php">
             <fieldset>          
                 <legend>新規登録フォーム</legend>
                 <input type="submit" value="新規登録">
