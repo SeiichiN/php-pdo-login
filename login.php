@@ -30,15 +30,21 @@ if (isset($_POST["login"])) {
 
         // 3. エラー処理
         try {
-            $pdo = new PDO($dsn, $db['user'], $db['pass'], array(PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION));
+//            $pdo = new PDO($dsn, $db['user'], $db['pass'], array(PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION));
+            $pdo = new PDO($dsn, $db['user'], $db['pass']);
+			// クエリ発行のたびにエラーを出力し、try..catch..で処理する。
+			$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-            $stmt = $pdo->prepare("SELECT * FROM {$db['dbtable']} WHERE id = ?");
+            $stmt = $pdo->prepare("SELECT * FROM {$db['dbtable']} WHERE name = ?");
+			// prepareでの？への値の渡し方は、配列でないといけない。
+			// ？が複数ある場合もあるからなあ。
             $stmt->execute(array($userid));
 
             $password = $_POST["password"];
 
             if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 if (password_verify($password, $row['password'])) {
+					// セッションIDを新しく作りなおす。
                     session_regenerate_id(true);
 
                     // 入力したIDのユーザー名を取得
@@ -53,12 +59,12 @@ if (isset($_POST["login"])) {
                     exit();  // 処理終了
                 } else {
                     // 認証失敗
-                    $errorMessage = 'ユーザーIDあるいはパスワードに誤りがあります。';
+                    $errorMessage = '(認証失敗)ユーザーIDあるいはパスワードに誤りがあります。';
                 }
             } else {
                 // 4. 認証成功なら、セッションIDを新規に発行する
                 // 該当データなし
-                $errorMessage = 'ユーザーIDあるいはパスワードに誤りがあります。';
+                $errorMessage = '(該当データなし)ユーザーIDあるいはパスワードに誤りがあります。';
             }
         } catch (PDOException $e) {
             $errorMessage = 'データベースエラー';
