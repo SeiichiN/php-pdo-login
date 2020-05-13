@@ -4,14 +4,16 @@
 session_start();
 
 $db['host'] = "localhost";  // DBサーバのURL
-$db['user'] = "se-ichi";  // ユーザー名
-$db['pass'] = "qwer";  // ユーザー名のパスワード
+$db['user'] = "root";  // ユーザー名
+$db['pass'] = "root";  // ユーザー名のパスワード
 $db['dbname'] = "logindb";  // データベース名
 $db['dbtable'] = "dbuser";  // テーブル名
 
 // エラーメッセージ、登録完了メッセージの初期化
 $errorMessage = "";
 $signUpMessage = "";
+
+dbcheck();
 
 // ログインボタンが押された場合
 if (isset($_POST["signUp"])) {
@@ -24,7 +26,11 @@ if (isset($_POST["signUp"])) {
         $errorMessage = 'パスワードが未入力です。';
     }
 
-    if (!empty($_POST["username"]) && !empty($_POST["password"]) && !empty($_POST["password2"]) && $_POST["password"] === $_POST["password2"]) {
+    if (!empty($_POST["username"]) &&
+        !empty($_POST["password"]) && 
+        !empty($_POST["password2"]) &&
+        $_POST["password"] === $_POST["password2"]) {
+       
         // 入力したユーザIDとパスワードを格納
         $username = $_POST["username"];
         $password = $_POST["password"];
@@ -37,11 +43,14 @@ if (isset($_POST["signUp"])) {
             $pdo = new PDO($dsn, $db['user'], $db['pass'], array(PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION));
 
             $stmt = $pdo->prepare("INSERT INTO {$db['dbtable']} (name, password) VALUES (?, ?)");
-
-            $stmt->execute(array($username, password_hash($password, PASSWORD_DEFAULT)));  // パスワードのハッシュ化を行う（今回は文字列のみなのでbindValue(変数の内容が変わらない)を使用せず、直接excuteに渡しても問題ない）
+            
+            // パスワードのハッシュ化を行う
+            // （今回は文字列のみなのでbindValue(変数の内容が変わらない)を使用せず、直接excuteに渡しても問題ない）
+            $stmt->execute(array($username, password_hash($password, PASSWORD_DEFAULT)));
             $userid = $pdo->lastinsertid();  // 登録した(DB側でauto_incrementした)IDを$useridに入れる
 
-            $signUpMessage = '登録が完了しました。あなたの登録IDは '. $userid. ' です。パスワードは '. $password. ' です。';  // ログイン時に使用するIDとパスワード
+            $signUpMessage = '登録が完了しました。あなたの登録IDは '
+                . $userid . ' です。パスワードは '. $password. ' です。';  // ログイン時に使用するIDとパスワード
         } catch (PDOException $e) {
             $errorMessage = 'データベースエラー';
             // $e->getMessage() でエラー内容を参照可能（デバック時のみ表示）
@@ -51,6 +60,19 @@ if (isset($_POST["signUp"])) {
         $errorMessage = 'パスワードに誤りがあります。';
     }
 }
+
+function dbcheck () {
+    $link = mysql_connect($db['host'], $db['user'], $db['pass']);
+    $sql = "CREATE DATABASE IF NOT EXISTS {$db['dbname']} DEFAULT CHARACTER SET UTF8;";
+    mysql_query($sql);
+    $sql = "CREATE TABLE IF NOT EXISTS {$db['dbtable']} ";
+    $sql = $sql . "(`user` varchar(50) NOT NULL PRIMARY KEY, ";
+    $sql = $sql . "`pass` varchar(50) NOT NULL";
+    $sql = $sql . ") ENGINE=InnoDB DEFAULT CHARSET=utf8 ";
+    $sql = $sql . "COLLATE=utf8_general_ci"; 
+    mysql_query($sql);
+}
+
 ?>
 
 <!doctype html>

@@ -4,8 +4,8 @@
 session_start();
 
 $db['host'] = "localhost";  // DBサーバのURL
-$db['user'] = "se-ichi";  // ユーザー名
-$db['pass'] = "qwer";  // ユーザー名のパスワード
+$db['user'] = "root";  // ユーザー名
+$db['pass'] = "root";  // ユーザー名のパスワード
 $db['dbname'] = "logindb";  // データベース名
 $db['dbtable'] = "dbuser";  // テーブル名
 
@@ -87,10 +87,17 @@ if (isset($_POST["login"])) {
         <form id="loginForm" name="loginForm" action="" method="POST">
             <fieldset>
                 <legend>ログインフォーム</legend>
-                <div><font color="#ff0000"><?php echo htmlspecialchars($errorMessage, ENT_QUOTES); ?></font></div>
-                <label for="userid">ユーザーID</label><input type="text" id="userid" name="userid" placeholder="ユーザーIDを入力" value="<?php if (!empty($_POST["userid"])) {echo htmlspecialchars($_POST["userid"], ENT_QUOTES);} ?>">
+                <div>
+                    <font color="#ff0000">
+                        <?php echo htmlspecialchars($errorMessage, ENT_QUOTES); ?>
+                    </font>
+                </div>
+                <label for="userid">ユーザーID</label>
+                <input type="text" id="userid" name="userid" placeholder="ユーザーIDを入力" 
+                        value="<?php if (!empty($_POST["userid"])) {echo htmlspecialchars($_POST["userid"], ENT_QUOTES);} ?>">
                 <br>
-                <label for="password">パスワード</label><input type="password" id="password" name="password" value="" placeholder="パスワードを入力">
+                <label for="password">パスワード</label>
+                <input type="password" id="password" name="password" value="" placeholder="パスワードを入力">
                 <br>
                 <input type="submit" id="login" name="login" value="ログイン">
             </fieldset>
