@@ -62,15 +62,28 @@ if (isset($_POST["signUp"])) {
 }
 
 function dbcheck () {
-    $link = mysql_connect($db['host'], $db['user'], $db['pass']);
-    $sql = "CREATE DATABASE IF NOT EXISTS {$db['dbname']} DEFAULT CHARACTER SET UTF8;";
-    mysql_query($sql);
+  $dsn = "mysql:host={$db['host']};dbname={$db['dbname']};charset=utf8";
+  try {
+    $pdo = new PDO( $dsn, $db['user'], $db['pass'] );
+    $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $sql = "CREATE DATABASE IF NOT EXISTS {$db['dbname']} DEFAULT
+  CHARACTER SET UTF8;";
+    echo "データベースを作成しました\n";
+    $stmt = $pdo->query($sql);
+    var_dump($stmt);
     $sql = "CREATE TABLE IF NOT EXISTS {$db['dbtable']} ";
     $sql = $sql . "(`user` varchar(50) NOT NULL PRIMARY KEY, ";
     $sql = $sql . "`pass` varchar(50) NOT NULL";
     $sql = $sql . ") ENGINE=InnoDB DEFAULT CHARSET=utf8 ";
     $sql = $sql . "COLLATE=utf8_general_ci"; 
-    mysql_query($sql);
+    $stmt = $pdo->query($sql);
+    var_dump($stmt);
+    echo "テーブルを作成しました\n";
+  } catch (PDOException $e) {
+    echo "接続失敗: " . $e->getMessage() . "\n";
+    exit();
+  }
 }
 
 ?>
@@ -103,3 +116,5 @@ function dbcheck () {
         </form>
     </body>
 </html>
+
+<!-- 修正時刻： Thu May 14 06:31:11 2020 -->
