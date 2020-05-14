@@ -35,7 +35,8 @@ if (isset($_POST["login"])) {
 			// クエリ発行のたびにエラーを出力し、try..catch..で処理する。
 			$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-            $stmt = $pdo->prepare("SELECT * FROM {$db['dbtable']} WHERE name = ?");
+            $sql = "SELECT * FROM " . $db['dbtable'] . " WHERE name = ?";
+            $stmt = $pdo->prepare($sql);
 			// prepareでの？への値の渡し方は、配列でないといけない。
 			// ？が複数ある場合もあるからなあ。
             $stmt->execute(array($userid));
@@ -49,7 +50,7 @@ if (isset($_POST["login"])) {
 
                     // 入力したIDのユーザー名を取得
                     $id = $row['id'];
-                    $sql = "SELECT * FROM {$db['dbtable']} WHERE id = $id";  //入力したIDからユーザー名を取得
+                    $sql = "SELECT * FROM " . $db['dbtable'] . " WHERE id = " . $id;  //入力したIDからユーザー名を取得
                     $stmt = $pdo->query($sql);
                     foreach ($stmt as $row) {
                         $row['name'];  // ユーザー名
@@ -70,7 +71,7 @@ if (isset($_POST["login"])) {
             $errorMessage = 'データベースエラー';
             //$errorMessage = $sql;
             // $e->getMessage() でエラー内容を参照可能（デバック時のみ表示）
-            // echo $e->getMessage();
+            echo $e->getMessage();
         }
     }
 }
