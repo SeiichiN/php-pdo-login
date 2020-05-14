@@ -3,17 +3,14 @@
 // セッション開始
 session_start();
 
-$db['host'] = "localhost";  // DBサーバのURL
-$db['user'] = "root";  // ユーザー名
-$db['pass'] = "root";  // ユーザー名のパスワード
-$db['dbname'] = "logindb";  // データベース名
-$db['dbtable'] = "dbuser";  // テーブル名
+$db = array();
+
+require_once('./db.conf');
 
 // エラーメッセージ、登録完了メッセージの初期化
 $errorMessage = "";
 $signUpMessage = "";
 
-dbcheck();
 
 // ログインボタンが押された場合
 if (isset($_POST["signUp"])) {
@@ -42,7 +39,8 @@ if (isset($_POST["signUp"])) {
         try {
             $pdo = new PDO($dsn, $db['user'], $db['pass'], array(PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION));
 
-            $stmt = $pdo->prepare("INSERT INTO {$db['dbtable']} (name, password) VALUES (?, ?)");
+            $sql = "INSERT INTO " . $db['dbtable'] . " (name, password) VALUES (?, ?)";
+            $stmt = $pdo->prepare($sql);
             
             // パスワードのハッシュ化を行う
             // （今回は文字列のみなのでbindValue(変数の内容が変わらない)を使用せず、直接excuteに渡しても問題ない）
@@ -54,36 +52,11 @@ if (isset($_POST["signUp"])) {
         } catch (PDOException $e) {
             $errorMessage = 'データベースエラー';
             // $e->getMessage() でエラー内容を参照可能（デバック時のみ表示）
-            // echo $e->getMessage();
+            echo "Line: " . $e->getLine() . " : " . $e->getMessage();
         }
     } else if($_POST["password"] != $_POST["password2"]) {
         $errorMessage = 'パスワードに誤りがあります。';
     }
-}
-
-function dbcheck () {
-  $dsn = "mysql:host={$db['host']};dbname={$db['dbname']};charset=utf8";
-  try {
-    $pdo = new PDO( $dsn, $db['user'], $db['pass'] );
-    $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $sql = "CREATE DATABASE IF NOT EXISTS {$db['dbname']} DEFAULT
-  CHARACTER SET UTF8;";
-    echo "データベースを作成しました\n";
-    $stmt = $pdo->query($sql);
-    var_dump($stmt);
-    $sql = "CREATE TABLE IF NOT EXISTS {$db['dbtable']} ";
-    $sql = $sql . "(`user` varchar(50) NOT NULL PRIMARY KEY, ";
-    $sql = $sql . "`pass` varchar(50) NOT NULL";
-    $sql = $sql . ") ENGINE=InnoDB DEFAULT CHARSET=utf8 ";
-    $sql = $sql . "COLLATE=utf8_general_ci"; 
-    $stmt = $pdo->query($sql);
-    var_dump($stmt);
-    echo "テーブルを作成しました\n";
-  } catch (PDOException $e) {
-    echo "接続失敗: " . $e->getMessage() . "\n";
-    exit();
-  }
 }
 
 ?>

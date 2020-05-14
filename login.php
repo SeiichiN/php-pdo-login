@@ -3,14 +3,14 @@
 // セッション開始
 session_start();
 
-$db['host'] = "localhost";  // DBサーバのURL
-$db['user'] = "root";  // ユーザー名
-$db['pass'] = "root";  // ユーザー名のパスワード
-$db['dbname'] = "logindb";  // データベース名
-$db['dbtable'] = "dbuser";  // テーブル名
-
 // エラーメッセージの初期化
 $errorMessage = "";
+
+require_once('./dbcheck.php');
+require_once('./db.conf');
+
+dbcheck($db);
+
 
 // ログインボタンが押された場合
 if (isset($_POST["login"])) {
