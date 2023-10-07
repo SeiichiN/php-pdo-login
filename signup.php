@@ -6,6 +6,7 @@ session_start();
 $db = array();
 
 require_once('./db.conf');
+require_once('./db_connect.php');
 
 // エラーメッセージ、登録完了メッセージの初期化
 $errorMessage = "";
@@ -14,49 +15,49 @@ $signUpMessage = "";
 
 // ログインボタンが押された場合
 if (isset($_POST["signUp"])) {
-    // 1. ユーザIDの入力チェック
-    if (empty($_POST["username"])) {  // 値が空のとき
-        $errorMessage = 'ユーザーIDが未入力です。';
-    } else if (empty($_POST["password"])) {
-        $errorMessage = 'パスワードが未入力です。';
-    } else if (empty($_POST["password2"])) {
-        $errorMessage = 'パスワードが未入力です。';
+  // 1. ユーザIDの入力チェック
+  if (empty($_POST["username"])) {  // 値が空のとき
+    $errorMessage = 'ユーザーIDが未入力です。';
+  } else if (empty($_POST["password"])) {
+    $errorMessage = 'パスワードが未入力です。';
+  } else if (empty($_POST["password2"])) {
+    $errorMessage = 'パスワードが未入力です。';
+  }
+
+  if (!empty($_POST["username"]) &&
+      !empty($_POST["password"]) && 
+      !empty($_POST["password2"]) &&
+      $_POST["password"] === $_POST["password2"]) {
+    
+    // 入力したユーザIDとパスワードを格納
+    $username = $_POST["username"];
+    $password = $_POST["password"];
+
+    // 2. ユーザIDとパスワードが入力されていたら認証する
+    $pdo = db_connect($db);
+
+    // 3. エラー処理
+    try {
+      $sql = "INSERT INTO dbuser (name, password) VALUES (:username, :password)";
+      $stmt = $pdo->prepare($sql);
+      $stmt->bindValue(':username', $username, PDO::PARAM_STR);
+      $stmt->bindValue(':password', password_hash($password, PASSWORD_DEFAULT), PDO::PARAM_STR);
+      
+      // パスワードのハッシュ化を行う
+      // （今回は文字列のみなのでbindValue(変数の内容が変わらない)を使用せず、直接excuteに渡しても問題ない）
+      $stmt->execute();
+      $userid = $pdo->lastinsertid();  // 登録した(DB側でauto_incrementした)IDを$useridに入れる
+
+      $signUpMessage = '登録が完了しました。あなたの登録IDは '
+                     . $userid . ' です。パスワードは '. $password. ' です。';  // ログイン時に使用するIDとパスワード
+    } catch (PDOException $e) {
+      $errorMessage = 'データベースエラー';
+      // $e->getMessage() でエラー内容を参照可能（デバック時のみ表示）
+      echo "Line: " . $e->getLine() . " : " . $e->getMessage();
     }
-
-    if (!empty($_POST["username"]) &&
-        !empty($_POST["password"]) && 
-        !empty($_POST["password2"]) &&
-        $_POST["password"] === $_POST["password2"]) {
-       
-        // 入力したユーザIDとパスワードを格納
-        $username = $_POST["username"];
-        $password = $_POST["password"];
-
-        // 2. ユーザIDとパスワードが入力されていたら認証する
-        $dsn = sprintf('mysql: host=%s; dbname=%s; charset=utf8', $db['host'], $db['dbname']);
-
-        // 3. エラー処理
-        try {
-            $pdo = new PDO($dsn, $db['user'], $db['pass'], array(PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION));
-
-            $sql = "INSERT INTO " . $db['dbtable'] . " (name, password) VALUES (?, ?)";
-            $stmt = $pdo->prepare($sql);
-            
-            // パスワードのハッシュ化を行う
-            // （今回は文字列のみなのでbindValue(変数の内容が変わらない)を使用せず、直接excuteに渡しても問題ない）
-            $stmt->execute(array($username, password_hash($password, PASSWORD_DEFAULT)));
-            $userid = $pdo->lastinsertid();  // 登録した(DB側でauto_incrementした)IDを$useridに入れる
-
-            $signUpMessage = '登録が完了しました。あなたの登録IDは '
-                . $userid . ' です。パスワードは '. $password. ' です。';  // ログイン時に使用するIDとパスワード
-        } catch (PDOException $e) {
-            $errorMessage = 'データベースエラー';
-            // $e->getMessage() でエラー内容を参照可能（デバック時のみ表示）
-            echo "Line: " . $e->getLine() . " : " . $e->getMessage();
-        }
-    } else if($_POST["password"] != $_POST["password2"]) {
-        $errorMessage = 'パスワードに誤りがあります。';
-    }
+  } else if($_POST["password"] != $_POST["password2"]) {
+    $errorMessage = 'パスワードに誤りがあります。';
+  }
 }
 
 ?>
@@ -90,4 +91,4 @@ if (isset($_POST["signUp"])) {
     </body>
 </html>
 
-<!-- 修正時刻： Thu May 14 06:31:11 2020 -->
+<!-- 修正時刻： Sat 2023/10/07 13:53:470 -->

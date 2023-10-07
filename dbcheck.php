@@ -2,24 +2,19 @@
 // dbcheck.php
 //
 
-$db = array();
-
+require_once('db_connect.php');
 
 function dbcheck ($db) {
-  $dsn = "mysql:host=" . $db['host'] . "; dbname=" . $db['dbname'] . "; charset=utf8";
-  // echo "dsn: $dsn<br>\n";
+  $pdo = db_connect($db);
   try {
-    $pdo = new PDO( $dsn, $db['user'], $db['pass'] );
-    $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $sql = "CREATE TABLE IF NOT EXISTS $db[dbtable] ";
-    $sql = $sql . "(`id` int(10) NOT NULL AUTO_INCREMENT, ";
-    $sql = $sql . "`name` varchar(50) NOT NULL, ";
-    $sql = $sql . "`password` varchar(255) NOT NULL, ";
-    $sql = $sql . "PRIMARY KEY (`id`) ";
-    $sql = $sql . ") ENGINE=InnoDB DEFAULT CHARSET=utf8 ";
-    $sql = $sql . "COLLATE=utf8_general_ci"; 
-    $stmt = $pdo->query($sql);
+    $sql = "CREATE TABLE IF NOT EXISTS dbuser ";
+    $sql = $sql . "(id int(10) NOT NULL AUTO_INCREMENT, ";
+    $sql = $sql . "name varchar(50) NOT NULL, ";
+    $sql = $sql . "password varchar(255) NOT NULL, ";
+    $sql = $sql . "PRIMARY KEY (id) ";
+    $sql = $sql . ")";
+    $stmt = $pdo->prepare($sql);
+    $result = $stmt->execute();
     // var_dump($stmt);
     // echo "テーブルを作成しました\n";
   } catch (PDOException $e) {
@@ -32,16 +27,16 @@ function dbcheck ($db) {
 }
 
 function makedb($db) {
-  $dsn = "mysql:host=" . $db['host'] . "; charset=utf8";
+  $dsn = "mysql:host={$db['host']};charset=utf8";
   try {
     $pdo = new PDO( $dsn, $db['user'], $db['pass'] );
     $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $sql = "CREATE DATABASE IF NOT EXISTS " 
-         . $db[dbname] 
+    $sql = "CREATE DATABASE IF NOT EXISTS :dbname " 
          . " DEFAULT CHARACTER SET utf8";
-    // echo $sql; echo "<br>\n";
-    $stmt = $pdo->query($sql);
+    $stmt = $pdo->prepare($sql);
+    $stmt->bindValue(':dbname', $db['dbname'], PDO::PARAM_STR);
+    $stmt = $pdo->execute($sql);
     $mes = "データベースを作成しました<br>\n";
     $_SESSION['mes'] = $mes;
     // var_dump($stmt);
@@ -55,4 +50,4 @@ function makedb($db) {
 }
 
 
-/* 修正時刻： Fri May 15 13:36:15 2020 */
+/* 修正時刻： Sat 2023/10/07 13:53:470 */

@@ -6,13 +6,16 @@ session_start();
 // エラーメッセージの初期化
 $errorMessage = "";
 
-require_once('./dbcheck.php');
+$db = array();
+
+require_once('./util.php');
 require_once('./db.conf');
+require_once('./dbcheck.php');
 
 dbcheck($db);
 
 $message = null;
-if ($_SESSION['mes'] != null) {
+if (isset($_SESSION['mes']) && $_SESSION['mes'] != null) {
   $message = $_SESSION['mes'];
   $_SESSION['mes'] = null;
 }
@@ -31,19 +34,16 @@ if (isset($_POST["login"])) {
     $userid = $_POST["userid"];
 
     // 2. ユーザIDとパスワードが入力されていたら認証する
-    $dsn = sprintf('mysql: host=%s; dbname=%s; charset=utf8', $db['host'], $db['dbname']);
+    $pdo = db_connect($db);
 
     // 3. エラー処理
     try {
-      $pdo = new PDO($dsn, $db['user'], $db['pass']);
-	  // クエリ発行のたびにエラーを出力し、try..catch..で処理する。
-	  $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-      $sql = "SELECT * FROM " . $db['dbtable'] . " WHERE name = ?";
+      $sql = "SELECT * FROM dbuser WHERE name = :userid";
       $stmt = $pdo->prepare($sql);
+      $stmt->bindValue(':userid', $userid, PDO::PARAM_STR);
 	  // prepareでの？への値の渡し方は、配列でないといけない。
 	  // ？が複数ある場合もあるからなあ。
-      $stmt->execute(array($userid));
+      $stmt->execute();
 
       $password = $_POST["password"];
 
@@ -54,12 +54,12 @@ if (isset($_POST["login"])) {
 
           // 入力したIDのユーザー名を取得
           $id = $row['id'];
-          $sql = "SELECT * FROM " . $db['dbtable'] . " WHERE id = " . $id;  //入力したIDからユーザー名を取得
-          $stmt = $pdo->query($sql);
-          foreach ($stmt as $row) {
-            $row['name'];  // ユーザー名
-          }
-          $_SESSION["NAME"] = $row['name'];
+          $sql = "SELECT * FROM dbuser WHERE id = :id";  //入力したIDからユーザー名を取得
+          $stmt = $pdo->prepare($sql);
+          $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+          $stmt->execute();
+          $result = $stmt->fetch(PDO::FETCH_ASSOC);
+          $_SESSION["NAME"] = $result['name'];
           header("Location: main.php");  // メイン画面へ遷移
           exit();  // 処理終了
         } else {
@@ -95,12 +95,12 @@ if (isset($_POST["login"])) {
         <legend>ログインフォーム</legend>
         <div>
           <font color="#ff0000">
-            <?php echo htmlspecialchars($errorMessage, ENT_QUOTES); ?>
+            <?php echo h($errorMessage); ?>
           </font>
         </div>
         <label for="userid">ユーザーID</label>
         <input type="text" id="userid" name="userid" placeholder="ユーザーIDを入力" 
-               value="<?php if (!empty($_POST["userid"])) {echo htmlspecialchars($_POST["userid"], ENT_QUOTES);} ?>">
+               value="<?php if (!empty($_POST["userid"])) {echo h($_POST["userid"]);} ?>">
         <br>
         <label for="password">パスワード</label>
         <input type="password" id="password" name="password" value="" placeholder="パスワードを入力">
@@ -118,4 +118,4 @@ if (isset($_POST["login"])) {
   </body>
 </html>
 
-修正時刻： Fri May 15 13:41:25 2020
+<!-- 修正時刻： Sat 2023/10/07 13:53:470 -->
