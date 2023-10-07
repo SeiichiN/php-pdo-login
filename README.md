@@ -1,4 +1,4 @@
-# login2
+# php-pdo-login
 login with php-pdo
 
 ### 必要な準備
