@@ -4,7 +4,8 @@
 
 require_once('db_connect.php');
 
-function dbcheck ($db) {
+function dbcheck($db)
+{
   $pdo = db_connect($db);
   try {
     $sql = "CREATE TABLE IF NOT EXISTS dbuser ";
@@ -26,17 +27,18 @@ function dbcheck ($db) {
   }
 }
 
-function makedb($db) {
+function makedb($db)
+{
   $dsn = "mysql:host={$db['host']};charset=utf8";
   try {
-    $pdo = new PDO( $dsn, $db['user'], $db['pass'] );
+    $pdo = new PDO($dsn, $db['user'], $db['pass']);
     $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $sql = "CREATE DATABASE IF NOT EXISTS :dbname " 
-         . " DEFAULT CHARACTER SET utf8";
+    $sql = "CREATE DATABASE IF NOT EXISTS :dbname "
+      . " DEFAULT CHARACTER SET utf8";
     $stmt = $pdo->prepare($sql);
     $stmt->bindValue(':dbname', $db['dbname'], PDO::PARAM_STR);
-    $stmt = $pdo->execute($sql);
+    $stmt = $stmt->execute();
     $mes = "データベースを作成しました<br>\n";
     $_SESSION['mes'] = $mes;
     // var_dump($stmt);
